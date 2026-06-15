@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Context-Aware Surgical AI Monitoring Simulation — Laparoscopic Cholecystectomy</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-primary: #09090b;
+      --bg-secondary: #121214;
+      --bg-card: #1a1a1e;
+      --bg-card-hover: #242429;
+      --border: #2e2e33;
+      --border-active: #52525b;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-blue: #3b82f6;
+      --accent-teal: #14b8a6;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a78bfa;
+      --glow-blue: rgba(59, 130, 246, 0.08);
+      --glow-teal: rgba(20, 184, 166, 0.08);
+      --glow-red: rgba(239, 68, 68, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', 'IBM Plex Sans KR', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px var(--glow-blue);
+      }
+
+      50% {
+        box-shadow: 0 0 20px var(--glow-blue);
+      }
+    }
+
+    @keyframes scanline {
+      0% {
+        transform: translateY(-100%);
+      }
+
+      100% {
+        transform: translateY(100%);
+      }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .animate-slide {
+      animation: slideUp 0.5s ease-out;
+    }
+
+    .animate-pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Landing page */
+    .landing {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+        var(--bg-primary);
+    }
+
+    .landing h1 {
+      font-size: 2.15rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .landing .subtitle {
+      font-size: 1.0rem;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 2.5rem;
+      max-width: 640px;
+      line-height: 1.6;
+    }
+
+    .condition-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      max-width: 950px;
+      width: 100%;
+    }
+
+    .condition-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .condition-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent-blue);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .condition-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.12);
+    }
+
+    .condition-card:hover::before {
+      opacity: 1;
+    }
+
+    .condition-card .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    .condition-card h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .condition-card p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    .tag-a {
+      background: rgba(100, 116, 139, 0.2);
+      color: #94a3b8;
+    }
+
+    .tag-b {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .tag-c {
+      background: rgba(20, 184, 166, 0.15);
+      color: #5eead4;
+    }
+
+    /* Main simulation layout */
+    .sim-container {
+      display: grid;
+      grid-template-columns: 300px 1fr 320px;
+      grid-template-rows: 64px 1fr;
+      height: 100vh;
+      gap: 0;
+    }
+
+    /* Top bar */
+    .topbar {
+      grid-column: 1 / 3;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+    }
+
+    .topbar-right {
+      grid-column: 3 / 4;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.2rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .topbar-brand {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .topbar-brand .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    .topbar-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-left: auto;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .topbar-info .badge {
+      padding: 0.3rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .badge-static {
+      background: rgba(100, 116, 139, 0.2);
+      color: #94a3b8;
+    }
+
+    .badge-phase {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .badge-full {
+      background: rgba(20, 184, 166, 0.15);
+      color: #5eead4;
+    }
+
+    /* Left panel */
+    .left-panel {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .panel-section {
+      margin-bottom: 2rem;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .phase-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .phase-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 1.0rem;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .phase-item.active {
+      background: var(--glow-blue);
+      color: var(--text-primary);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .phase-item.completed {
+      color: var(--text-muted);
+    }
+
+    .phase-item.completed .phase-dot {
+      background: var(--accent-green);
+    }
+
+    .phase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .phase-item.active .phase-dot {
+      background: var(--accent-blue);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+    }
+
+    .vital-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .vital-card {
+      background: var(--bg-card);
+      border-radius: 8px;
+      padding: 0.75rem 0.6rem;
+      text-align: center;
+    }
+
+    .vital-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .vital-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .vital-value.normal {
+      color: var(--accent-green);
+    }
+
+    .vital-value.warning {
+      color: var(--accent-amber);
+    }
+
+    .vital-value.danger {
+      color: var(--accent-red);
+    }
+
+    /* Center - surgical view */
+    .center-panel {
+      background: var(--bg-primary);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* AI Info Area (bottom of center) */
+    .ai-info-area {
+      flex-shrink: 0;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .ai-info-content {
+      display: flex;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+
+    .ai-left-column {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ai-confidence-section {
+      flex: 1;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .ai-confidence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.35rem;
+    }
+
+    .ai-confidence-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .ai-confidence-value {
+      font-size: 1.55rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .ai-confidence-warning {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 0.35rem;
+    }
+
+    .ai-reasoning-list {
+      margin-top: 0.5rem;
+      font-size: 1.0rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .ai-decision-section {
+      flex: 1.2;
+    }
+
+    .ai-decision-badge {
+      display: inline-block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .ai-decision-badge.alert {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .ai-decision-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+      line-height: 1.4;
+    }
+
+    .ai-decision-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .ai-action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn-approve-lg,
+    .btn-intervene-lg {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    .btn-approve-lg {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-approve-lg:hover {
+      background: #2563eb;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-approve-lg:disabled,
+    .btn-intervene-lg:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-intervene-lg {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .btn-intervene-lg:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    }
+
+    .ai-waiting-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .time-display {
+      font-size: 1.4rem;
+      color: var(--text-primary);
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    .surgical-viewport {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: radial-gradient(ellipse at center, #18181b 0%, #09090b 100%);
+    }
+
+    .viewport-label {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .viewport-label .rec {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* SVG surgical animation area */
+    .surgical-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Event overlay */
+    .event-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 1.25rem;
+      background: linear-gradient(to top, rgba(9, 9, 11, 0.98) 0%, rgba(9, 9, 11, 0.7) 70%, transparent 100%);
+    }
+
+    .event-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    .event-card.critical {
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(24, 24, 27, 0.98);
+    }
+
+    .event-card.warning {
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .event-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+
+    .event-type {
+      font-size: 0.74rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .event-type.decision {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+    }
+
+    .event-type.alert {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .event-type.info {
+      background: rgba(20, 184, 166, 0.15);
+      color: #5eead4;
+    }
+
+    .event-timer {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .event-title {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .event-desc {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.8rem;
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-approve {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-approve:hover {
+      background: #2563eb;
+    }
+
+    .btn-intervene {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-intervene:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card-hover);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    /* Right panel — Evaluation */
+    .right-panel {
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* AI status section (Condition C only) */
+    .ai-status-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .confidence-bar-bg {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .confidence-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s ease, background 0.5s;
+    }
+
+    .ai-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      font-size: 0.84rem;
+    }
+
+    .ai-detail-label {
+      color: var(--text-muted);
+    }
+
+    .ai-detail-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Log section */
+    .log-entry {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(42, 52, 68, 0.5);
+      font-size: 0.84rem;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .log-time {
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      flex-shrink: 0;
+    }
+
+    .log-text {
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .log-text.user-action {
+      color: var(--accent-blue);
+    }
+
+    .log-text.ai-action {
+      color: var(--accent-teal);
+    }
+
+    .log-text.alert-action {
+      color: var(--accent-amber);
+    }
+
+    /* Phase info (Condition B, C) */
+    .phase-info-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .phase-info-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .risk-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .risk-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .risk-low {
+      background: var(--accent-green);
+    }
+
+    .risk-medium {
+      background: var(--accent-amber);
+    }
+
+    .risk-high {
+      background: var(--accent-red);
+    }
+
+    .risk-label {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    /* Progress bar */
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 0.6rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 2px;
+      transition: width 1s ease;
+    }
+
+    /* Decision summary */
+    .decision-summary {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.35rem 0;
+      font-size: 0.86rem;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-weight: 600;
+    }
+
+    /* Completion screen */
+    .completion-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.02) 0%, transparent 60%), var(--bg-primary);
+    }
+
+    .completion-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 640px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .completion-card h2 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .completion-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .completion-stat {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .completion-stat .num {
+      font-size: 1.9rem;
+      font-weight: 700;
+    }
+
+    .completion-stat .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Evaluation Panel (right column) */
+    .eval-panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .eval-guidance {
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
+    .eval-guidance .guide-icon {
+      font-size: 1.05rem;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+
+    .eval-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 0.9rem;
+      margin-bottom: 0.6rem;
+      transition: all 0.3s ease;
+    }
+
+    .eval-item.answered {
+      border-color: rgba(20, 184, 166, 0.35);
+      background: rgba(20, 184, 166, 0.03);
+    }
+
+    .eval-item-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .eval-item-num {
+      background: var(--border);
+      color: var(--text-secondary);
+      min-width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .eval-item.answered .eval-item-num {
+      background: var(--accent-teal);
+      color: white;
+    }
+
+    .eval-item-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .eval-item-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin: 0.1rem 0 0.5rem 1.5rem;
+      line-height: 1.45;
+    }
+
+    .likert-row {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      margin-left: 0.4rem;
+    }
+
+    .likert-end-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      width: 2.8rem;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .likert-end-label:first-child {
+      text-align: right;
+    }
+
+    .likert-end-label:last-child {
+      text-align: left;
+    }
+
+    .likert-options {
+      display: flex;
+      gap: 0.15rem;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .likert-option {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .likert-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .likert-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .likert-option:hover .likert-circle {
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      background: rgba(59, 130, 246, 0.06);
+      transform: scale(1.08);
+    }
+
+    .likert-option input:checked+.likert-circle {
+      border-color: var(--accent-blue);
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      transform: scale(1.08);
+    }
+
+    .eval-submit-area {
+      padding: 0.85rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+
+    .eval-submit-btn {
+      width: 100%;
+      padding: 0.65rem;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent-blue);
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .eval-submit-btn:hover:not(:disabled) {
+      background: #2563eb;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .eval-submit-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .eval-progress {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.4rem;
+    }
+
+    .eval-complete-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      flex: 1;
+    }
+
+    .eval-check-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.1);
+      border: 2px solid var(--accent-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--accent-green);
+      margin-bottom: 1rem;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .eval-complete-title {
+      font-size: 1.0rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-primary);
+    }
+
+    .eval-complete-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* Vertical Stepper styles */
+    .vertical-stepper-container {
+      position: absolute;
+      left: 1.0rem;
+      top: 3.5rem;
+      bottom: 3.5rem;
+      width: 44px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 0;
+      background: rgba(9, 9, 11, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 22px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .vertical-steps {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+
+    .vertical-steps::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    .vertical-progress-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 2px;
+      background: var(--accent-blue);
+      transform: translateX(-50%);
+      z-index: 2;
+      transition: height 0.5s ease;
+    }
+
+    .vertical-step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 3;
+      position: relative;
+    }
+
+    .vertical-step-node {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .vertical-step-item.active .vertical-step-node {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .vertical-step-item.completed .vertical-step-node {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: white;
+    }
+
+    /* Floating Viewport Time Badge */
+    .viewport-time-badge {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(24, 24, 27, 0.85);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      z-index: 10;
+      font-family: 'JetBrains Mono', monospace;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Mode Selection styles */
+    .mode-select-container {
+      max-width: 800px;
+      width: 100%;
+      margin-top: 1.5rem;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .mode-select-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .mode-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent-blue);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .mode-card.ut-mode::before {
+      background: var(--accent-teal);
+    }
+
+    .mode-card.exp-mode::before {
+      background: var(--accent-purple);
+    }
+
+    .mode-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-4px);
+    }
+
+    .mode-card.ut-mode:hover {
+      box-shadow: 0 8px 32px rgba(20, 184, 166, 0.15);
+      border-color: var(--accent-teal);
+    }
+
+    .mode-card.exp-mode:hover {
+      box-shadow: 0 8px 32px rgba(167, 139, 250, 0.15);
+      border-color: var(--accent-purple);
+    }
+
+    .mode-card:hover::before {
+      opacity: 1;
+    }
+
+    .mode-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .mode-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      flex-grow: 1;
+    }
+
+    .mode-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .badge-ut {
+      background: rgba(20, 184, 166, 0.15);
+      color: #5eead4;
+    }
+
+    .badge-exp {
+      background: rgba(167, 139, 250, 0.15);
+      color: #c084fc;
+    }
+
+    .experiment-transition {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 60%), var(--bg-primary);
+      text-align: center;
+    }
+
+    .transition-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .transition-card h2 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .transition-card p {
+      font-size: 1.0rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .sim-container {
+        grid-template-columns: 260px 1fr 280px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .condition-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+      }
+
+      .sim-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 48px 1fr;
+      }
+
+      .left-panel,
+      .right-panel,
+      .topbar-right {
+        display: none;
+      }
+
+      .topbar {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    // =====================
+    // DATA: Cholecystectomy Phases & Events
+    // =====================
+    // Cholec80 standard 7-phase definition (Twinanda et al., 2017)
+    // Median durations from Cholec80 dataset statistics
+    const PHASES = [
+      { id: 'preparation', name: '수술 준비 (Preparation)', nameEn: 'P1: Preparation', risk: 'low', duration: 8, tools: ['Grasper', 'Hook'], cholec80Median: '3.2 min' },
+      { id: 'dissection', name: 'Calot 삼각 박리 (Calot Triangle Dissection)', nameEn: 'P2: Calot Triangle Dissection', risk: 'high', duration: 35, tools: ['Grasper', 'Hook', 'Bipolar'], cholec80Median: '13.8 min' },
+      { id: 'clipping', name: '결찰 및 절단 (Clipping & Cutting)', nameEn: 'P3: Clipping & Cutting', risk: 'high', duration: 15, tools: ['Clipper', 'Scissors'], cholec80Median: '2.4 min' },
+      { id: 'separation', name: '담낭 박리 (Gallbladder Dissection)', nameEn: 'P4: Gallbladder Dissection', risk: 'medium', duration: 30, tools: ['Hook', 'Bipolar', 'Grasper'], cholec80Median: '9.8 min' },
+      { id: 'extraction', name: '담낭 적출 (Gallbladder Retraction)', nameEn: 'P5: Gallbladder Retraction', risk: 'low', duration: 8, tools: ['Grasper', 'Specimen Bag'], cholec80Median: '1.8 min' },
+    ];
+
+    const EVENTS_BY_PHASE = {
+      preparation: [
+        {
+          id: 'e1',
+          type: 'decision',
+          title: 'AI 자동 기복(Pneumoperitoneum) 압력 설정',
+          titleEn: 'AI Auto Pneumoperitoneum Pressure Setting',
+          desc: 'AI가 환자 체형 데이터를 기반으로 CO₂ 주입 압력을 14mmHg로 설정했습니다. 승인하시겠습니까?',
+          descEn: 'AI has set CO₂ insufflation pressure to 14mmHg based on patient body data. Do you approve?',
+          aiConfidence: 92,
+          aiReasoning: '환자 BMI 24.3 기반 표준 프로토콜 적용',
+          aiReasoningEn: 'Standard protocol applied based on patient BMI 24.3',
+          correctAction: 'approve',
+          phaseContext: 'Cholec80 P1: Preparation'
+        }
+      ],
+      dissection: [
+        {
+          id: 'e2',
+          type: 'alert',
+          title: '⚠ Critical View of Safety (CVS) 미확보 경고',
+          titleEn: '⚠ Critical View of Safety (CVS) Not Achieved',
+          desc: 'AI 시각 분석 결과 CVS가 아직 확보되지 않았습니다. Strasberg criteria 3개 중 1개만 충족. AI가 자동 박리를 계속할까요?',
+          descEn: 'AI visual analysis indicates CVS not yet achieved. Only 1 of 3 Strasberg criteria met. Should AI continue automatic dissection?',
+          aiConfidence: 62,
+          aiReasoning: 'Hepatocystic triangle 시야 확보 불완전 — Strasberg Score 1/3',
+          aiReasoningEn: 'Hepatocystic triangle visualization incomplete — Strasberg Score 1/3',
+          correctAction: 'intervene',
+          phaseContext: 'Cholec80 P2: Calot Triangle Dissection'
+        },
+        {
+          id: 'e3',
+          type: 'decision',
+          title: 'AI 조직 견인 방향 자동 조정',
+          titleEn: 'AI Auto Tissue Traction Adjustment',
+          desc: 'AI가 Hartmann 낭 견인 각도를 측방 상방으로 15° 변경하여 시야를 개선하고자 합니다.',
+          descEn: 'AI proposes to adjust Hartmann pouch traction angle by 15° laterally-superiorly to improve visualization.',
+          aiConfidence: 84,
+          aiReasoning: '현재 견인 각도에서 담낭관 노출 부족, 15° 변경으로 시야 32% 개선 예측',
+          aiReasoningEn: 'Insufficient cystic duct exposure at current angle, 32% visibility improvement predicted with 15° change',
+          correctAction: 'approve',
+          phaseContext: 'Cholec80 P2: Calot Triangle Dissection'
+        }
+      ],
+      clipping: [
+        {
+          id: 'e4',
+          type: 'alert',
+          title: '⚠ 담낭관(Cystic Duct) 구조 확인 필요',
+          titleEn: '⚠ Cystic Duct Structure Verification Required',
+          desc: 'AI가 담낭관으로 식별한 구조물에 대해 클리핑을 진행하려 합니다. 식별 신뢰도가 낮아 의사 확인이 필요합니다.',
+          descEn: 'AI is about to clip the structure identified as cystic duct. Low identification confidence requires physician verification.',
+          aiConfidence: 55,
+          aiReasoning: '담관(CBD)과의 구분 불확실 — Clipper 적용 전 추가 확인 권장 (IOC 또는 ICG 형광)',
+          aiReasoningEn: 'CBD differentiation uncertain — additional verification recommended before clipping (IOC or ICG fluorescence)',
+          correctAction: 'intervene',
+          phaseContext: 'Cholec80 P3: Clipping & Cutting'
+        }
+      ],
+      separation: [
+        {
+          id: 'e5',
+          type: 'decision',
+          title: 'AI 전기소작(Electrocautery) 출력 자동 조정',
+          titleEn: 'AI Auto Electrocautery Power Adjustment',
+          desc: 'AI가 간상(Liver Bed)으로부터의 담낭 분리를 위해 전기소작 출력을 30W에서 25W로 하향 조정합니다.',
+          descEn: 'AI is reducing electrocautery power from 30W to 25W for gallbladder separation from the liver bed.',
+          aiConfidence: 90,
+          aiReasoning: '간 실질 근접 구간 감지 — 열 손상 최소화를 위한 출력 감소',
+          aiReasoningEn: 'Liver parenchyma proximity detected — power reduction to minimize thermal injury',
+          correctAction: 'approve',
+          phaseContext: 'Cholec80 P4: Gallbladder Dissection'
+        }
+      ],
+      extraction: [
+        {
+          id: 'e6',
+          type: 'decision',
+          title: '배액관 삽입 생략 제안',
+          titleEn: 'Drain Insertion Omission Suggested',
+          desc: 'AI가 합병증 위험도를 분석하고 배액관(drain) 삽입 없이 종료할 것을 제안합니다.',
+          descEn: 'AI has analyzed complication risk and suggests completing without drain insertion.',
+          aiConfidence: 86,
+          aiReasoning: '수술 시간 45분 이내, 출혈 미감지, 합병증 위험도 Low — 배액관 생략이 표준',
+          aiReasoningEn: 'Surgery time under 45min, no bleeding detected, low complication risk — drain omission is standard',
+          correctAction: 'approve',
+          phaseContext: 'Cholec80 P5: Gallbladder Retraction'
+        }
+      ]
+    };
+
+    // ---- i18n ----
+    const TEXTS = {
+      ko: {
+        landingTitle: 'Surgical AI Monitoring System',
+        landingSubtitle: '복강경 담낭절제술(Laparoscopic Cholecystectomy) 시뮬레이션',
+        conditionTitle: 'Phase + AI-State Adaptive Interface',
+        conditionDesc: '수술 단계와 AI 상태(Confidence, Reasoning)를 모두 반영하여 정보를 적응적으로 제시합니다.',
+        startBtn: '시작하기',
+        credits: 'Cholec80 Dataset (Twinanda et al., 2017) · Kookmin University · Smart Experience Design Lab · 2026',
+        topbarExit: '✕ 종료',
+        surgicalPhase: 'Surgical Phase',
+        vitalSign: 'Vital Sign',
+        time: 'Time',
+        liveLabel: 'LIVE — Laparoscopic View',
+        aiConfidence: 'AI Confidence',
+        highConf: 'High confidence',
+        modConf: 'Moderate confidence',
+        lowConf: 'Low confidence detected',
+        decision: 'Decision',
+        alert: 'Alert',
+        approve: '✓ APPROVE',
+        intervene: '✗ INTERVENE',
+        waitingMsg: '수술 진행 중... AI가 다음 의사결정 상황을 분석하고 있습니다.',
+        evalGuidance: '각 수술 단계와 AI 의사결정 상황을 포함하여 인터페이스를 충분히 탐색한 후 평가를 진행해 주세요.',
+        evalSubmit: '제출하기',
+        evalProgress: '응답 완료',
+        evalCompleteTitle: '감사합니다',
+        evalCompleteDesc: '정상적으로 제출되었습니다.',
+        likertLow: '매우\n낮음',
+        likertHigh: '매우\n높음',
+        evalDesc: {
+          situation_awareness: '현재 수술 단계(phase)와 상황을 쉽게 이해할 수 있다',
+          ai_transparency: 'AI의 상태(confidence, 위험도 등)를 이해할 수 있다',
+          info_prioritization: '중요한 정보가 적절하게 강조되어 있다',
+          cognitive_load: '인터페이스가 복잡하지 않고 쉽게 이해할 수 있다',
+          interaction_clarity: '행동(Approve/Intervene)이 명확하게 구분되고 이해된다',
+        },
+        completionTitle: '시뮬레이션 완료',
+        correctDecisions: '적절한 의사결정',
+        avgResponse: '평균 반응 시간',
+        interventions: '의사 개입 횟수',
+        decisionLog: '의사결정 기록',
+        approvedLabel: '승인',
+        intervenedLabel: '개입',
+        restartBtn: '다른 조건으로 재시작',
+        logSimStart: '시뮬레이션 시작 — 복강경 담낭절제술',
+        logCondition: '인터페이스 조건',
+        logPhaseChange: '단계 전환',
+        logEvent: '이벤트 발생',
+        logApprove: 'AI 판단 승인',
+        logIntervene: '의사 개입 결정',
+        logEvalSubmit: '✅ 휴리스틱 평가 제출 완료',
+        phaseInfoTitle: '현재 단계 정보',
+        riskLabel: '위험도',
+        cholecMedianLabel: 'Cholec80 중앙값',
+        toolsLabel: '도구',
+        inProgressLabel: '진행 중',
+      },
+      en: {
+        landingTitle: 'Surgical AI Monitoring System',
+        landingSubtitle: 'Laparoscopic Cholecystectomy Simulation',
+        conditionTitle: 'Phase + AI-State Adaptive Interface',
+        conditionDesc: 'Adaptively presents information reflecting both surgical phase and AI state (Confidence, Reasoning).',
+        startBtn: 'Start',
+        credits: 'Cholec80 Dataset (Twinanda et al., 2017) · Kookmin University · Smart Experience Design Lab · 2026',
+        topbarExit: '✕ Exit',
+        surgicalPhase: 'Surgical Phase',
+        vitalSign: 'Vital Sign',
+        time: 'Time',
+        liveLabel: 'LIVE — Laparoscopic View',
+        aiConfidence: 'AI Confidence',
+        highConf: 'High confidence',
+        modConf: 'Moderate confidence',
+        lowConf: 'Low confidence detected',
+        decision: 'Decision',
+        alert: 'Alert',
+        approve: '✓ APPROVE',
+        intervene: '✗ INTERVENE',
+        waitingMsg: 'Surgery in progress... AI is analyzing the next decision point.',
+        evalGuidance: 'Please explore the interface thoroughly, including each surgical phase and AI decision-making situation, before proceeding with the evaluation.',
+        evalSubmit: 'Submit',
+        evalProgress: 'answered',
+        evalCompleteTitle: 'Thank you',
+        evalCompleteDesc: 'Your evaluation has been submitted successfully.',
+        likertLow: 'Very\nLow',
+        likertHigh: 'Very\nHigh',
+        evalDesc: {
+          situation_awareness: 'I can easily understand the current surgical phase and situation',
+          ai_transparency: 'I can understand the AI state (confidence, risk level, etc.)',
+          info_prioritization: 'Important information is appropriately highlighted',
+          cognitive_load: 'The interface is not complex and easy to understand',
+          interaction_clarity: 'Actions (Approve/Intervene) are clearly distinguished and understood',
+        },
+        completionTitle: 'Simulation Complete',
+        correctDecisions: 'Appropriate Decisions',
+        avgResponse: 'Avg. Response Time',
+        interventions: 'Interventions',
+        decisionLog: 'Decision Log',
+        approvedLabel: 'Approved',
+        intervenedLabel: 'Intervened',
+        restartBtn: 'Restart',
+        logSimStart: 'Simulation started — Laparoscopic Cholecystectomy',
+        logCondition: 'Interface condition',
+        logPhaseChange: 'Phase transition',
+        logEvent: 'Event occurred',
+        logApprove: 'AI decision approved',
+        logIntervene: 'Physician intervention',
+        logEvalSubmit: '✅ Heuristic evaluation submitted',
+        phaseInfoTitle: 'Current Phase Info',
+        riskLabel: 'Risk',
+        cholecMedianLabel: 'Cholec80 Median',
+        toolsLabel: 'Tools',
+        inProgressLabel: 'in progress',
+      }
+    };
+
+    // Heuristic Evaluation Items
+    const EVAL_ITEMS = [
+      { id: 'situation_awareness', label: 'Situation Awareness' },
+      { id: 'ai_transparency', label: 'AI Transparency' },
+      { id: 'info_prioritization', label: 'Information Prioritization' },
+      { id: 'cognitive_load', label: 'Cognitive Load' },
+      { id: 'interaction_clarity', label: 'Interaction Clarity' },
+    ];
+
+    // Vital signs simulation
+    function generateVitals(phase) {
+      const base = {
+        preparation: { hr: 72, bp: '120/78', spo2: 99, co2: 14 },
+        dissection: { hr: 85, bp: '132/86', spo2: 97, co2: 15 },
+        clipping: { hr: 88, bp: '135/88', spo2: 97, co2: 14 },
+        separation: { hr: 82, bp: '130/84', spo2: 98, co2: 14 },
+        extraction: { hr: 74, bp: '122/78', spo2: 99, co2: 13 },
+      };
+      const v = base[phase] || base.preparation;
+      return {
+        hr: v.hr + Math.floor(Math.random() * 6 - 3),
+        bp: v.bp,
+        spo2: v.spo2,
+        co2: v.co2 + Math.floor(Math.random() * 2 - 1),
+      };
+    }
+
+    // =====================
+    // COMPONENTS
+    // =====================
+
+    // Phase image mapping
+    const PHASE_IMAGES = {
+      preparation: 'images/phase1.png',
+      dissection: 'images/phase2.png',
+      clipping: 'images/phase3.png',
+      separation: 'images/phase4.png',
+      extraction: 'images/phase5.png',
+    };
+
+    // Surgical View — real laparoscopic images per phase
+    function SurgicalView({ phase, phaseIndex }) {
+      const [loaded, setLoaded] = React.useState({});
+      const imgSrc = PHASE_IMAGES[phase] || PHASE_IMAGES.preparation;
+
+      // Preload all images on mount
+      React.useEffect(() => {
+        Object.values(PHASE_IMAGES).forEach(src => {
+          const img = new Image();
+          img.onload = () => setLoaded(prev => ({ ...prev, [src]: true }));
+          img.src = src;
+        });
+      }, []);
+
+      return (
+        <div style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#050508',
+        }}>
+          {/* All phase images stacked, only current one visible */}
+          {Object.entries(PHASE_IMAGES).map(([phaseId, src]) => (
+            <img
+              key={phaseId}
+              src={src}
+              alt={`Cholec80 Phase: ${phaseId}`}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: '100%',
+                objectFit: 'contain',
+                opacity: phase === phaseId ? 1 : 0,
+                transition: 'opacity 0.8s ease-in-out',
+                borderRadius: '4px',
+              }}
+            />
+          ))}
+
+          {/* Phase label bar at bottom */}
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '0.5rem 1rem',
+            background: 'linear-gradient(to top, rgba(5,5,8,0.85) 0%, rgba(5,5,8,0.4) 70%, transparent 100%)',
+            textAlign: 'center',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '0.72rem',
+            color: '#64748b',
+            letterSpacing: '0.03em',
+          }}>
+            Phase {phaseIndex + 1}/5 — {PHASES[phaseIndex]?.nameEn}
+          </div>
+        </div>
+      );
+    }
+
+
+    // Main App
+    function App() {
+      const [screen, setScreen] = useState('landing');
+      const [mode, setMode] = useState('select'); // 'select', 'ut', 'experiment'
+      const [lang, setLang] = useState('ko');
+      const [condition, setCondition] = useState(null);
+      const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
+      const [currentEventIdx, setCurrentEventIdx] = useState(0);
+      const [activeEvent, setActiveEvent] = useState(null);
+      const [decisions, setDecisions] = useState([]);
+      const [logs, setLogs] = useState([]);
+      const [vitals, setVitals] = useState({ hr: 72, bp: '120/78', spo2: 99, co2: 14 });
+      const [elapsedTime, setElapsedTime] = useState(0);
+      const [eventTimer, setEventTimer] = useState(0);
+      const [waitingForEvent, setWaitingForEvent] = useState(false);
+      const [evalScores, setEvalScores] = useState({});
+      const [evalSubmitted, setEvalSubmitted] = useState(false);
+      const [simulationDone, setSimulationDone] = useState(false);
+      const [evalPanelOpen, setEvalPanelOpen] = useState(false);
+      const [experimentResults, setExperimentResults] = useState({ A: null, B: null, C: null });
+      const timerRef = useRef(null);
+      const eventTimerRef = useRef(null);
+
+      const currentPhase = PHASES[currentPhaseIdx];
+      const phaseEvents = EVENTS_BY_PHASE[currentPhase?.id] || [];
+      const t = TEXTS[lang];
+
+      // Start simulation
+      const startSimulation = (cond) => {
+        setCondition(cond);
+        setScreen('simulation');
+        setCurrentPhaseIdx(0);
+        setCurrentEventIdx(0);
+        setDecisions([]);
+        setLogs([]);
+        setElapsedTime(0);
+        setEvalScores({});
+        setEvalSubmitted(false);
+        setSimulationDone(false);
+        setEvalPanelOpen(false);
+        addLog(t.logSimStart, 'system');
+        addLog(`${t.logCondition}: ${cond === 'A' ? 'Static' : cond === 'B' ? 'Phase-Adaptive' : 'Phase + AI-State Adaptive'}`, 'system');
+      };
+
+      const handleExit = () => {
+        setMode('select');
+        setScreen('landing');
+        setCondition(null);
+        setCurrentPhaseIdx(0);
+        setCurrentEventIdx(0);
+        setActiveEvent(null);
+        setDecisions([]);
+        setLogs([]);
+        setElapsedTime(0);
+        setEvalScores({});
+        setEvalSubmitted(false);
+        setSimulationDone(false);
+        setEvalPanelOpen(false);
+        setExperimentResults({ A: null, B: null, C: null });
+      };
+
+      const addLog = useCallback((text, type = 'system') => {
+        setLogs(prev => [...prev, { text, type, time: new Date() }]);
+      }, []);
+
+      // Vitals update
+      useEffect(() => {
+        if (screen !== 'simulation') return;
+        const iv = setInterval(() => {
+          setVitals(generateVitals(currentPhase?.id));
+        }, 3000);
+        return () => clearInterval(iv);
+      }, [screen, currentPhase]);
+
+      // Elapsed timer
+      useEffect(() => {
+        if (screen !== 'simulation') return;
+        timerRef.current = setInterval(() => {
+          setElapsedTime(prev => prev + 1);
+        }, 1000);
+        return () => clearInterval(timerRef.current);
+      }, [screen]);
+
+      // Trigger events with delay
+      useEffect(() => {
+        if (screen !== 'simulation') return;
+        if (activeEvent) return; // wait until current event is resolved
+
+        const events = EVENTS_BY_PHASE[PHASES[currentPhaseIdx]?.id] || [];
+        if (currentEventIdx < events.length) {
+          setWaitingForEvent(true);
+          const timeout = setTimeout(() => {
+            setActiveEvent(events[currentEventIdx]);
+            setEventTimer(0);
+            setWaitingForEvent(false);
+            addLog(`${t.logEvent}: ${events[currentEventIdx].title}`, 'ai');
+          }, 3000); // 3 sec delay between events
+          return () => clearTimeout(timeout);
+        } else {
+          // All events in this phase done — advance to next phase
+          if (currentPhaseIdx < PHASES.length - 1) {
+            const timeout = setTimeout(() => {
+              const nextIdx = currentPhaseIdx + 1;
+              setCurrentPhaseIdx(nextIdx);
+              setCurrentEventIdx(0);
+              addLog(`${t.logPhaseChange}: ${PHASES[nextIdx].name}`, 'system');
+            }, 2000);
+            return () => clearTimeout(timeout);
+          } else {
+            // All phases done
+            // All phases done — wait for eval
+            setTimeout(() => setSimulationDone(true), 2000);
+          }
+        }
+      }, [screen, currentPhaseIdx, currentEventIdx, activeEvent]);
+
+      // Event response timer
+      useEffect(() => {
+        if (!activeEvent) return;
+        eventTimerRef.current = setInterval(() => {
+          setEventTimer(prev => prev + 1);
+        }, 1000);
+        return () => clearInterval(eventTimerRef.current);
+      }, [activeEvent]);
+
+      const handleDecision = (action) => {
+        const evt = activeEvent;
+        const isCorrect = action === evt.correctAction;
+        const responseTime = eventTimer;
+
+        setDecisions(prev => [...prev, {
+          eventId: evt.id,
+          phase: currentPhase.id,
+          action,
+          correct: isCorrect,
+          responseTime,
+          aiConfidence: evt.aiConfidence,
+        }]);
+
+        addLog(
+          `${action === 'approve' ? `✓ ${t.logApprove}` : `✗ ${t.logIntervene}`} — ${evt.title} (${responseTime}s)`,
+          'user'
+        );
+
+        if (!isCorrect) {
+          addLog(
+            action === 'approve'
+              ? (lang === 'ko' ? '⚠ 이 상황에서는 의사 개입이 더 적절했을 수 있습니다' : '⚠ Physician intervention may have been more appropriate')
+              : (lang === 'ko' ? '⚠ AI 판단이 적절했을 수 있는 상황이었습니다' : '⚠ The AI decision may have been appropriate'),
+            'alert'
+          );
+        }
+
+        setActiveEvent(null);
+        setEventTimer(0);
+        setCurrentEventIdx(prev => prev + 1);
+      };
+
+      // Format time
+      const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+      // Heuristic Evaluation
+      const evalAnsweredCount = Object.keys(evalScores).length;
+      const evalAllAnswered = evalAnsweredCount === EVAL_ITEMS.length;
+
+      const handleEvalSubmit = () => {
+        const evalData = {
+          condition,
+          timestamp: new Date().toISOString(),
+          elapsedTime,
+          evaluationScores: evalScores,
+          decisions,
+          logs: logs.map(l => ({ text: l.text, type: l.type, time: l.time.toISOString() })),
+        };
+
+        fetch('/api/save-eval', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(evalData),
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Successfully saved evaluation data:', data);
+            addLog(lang === 'ko' ? `💾 평가 결과가 폴더에 저장되었습니다: ${data.filename}` : `💾 Evaluation results saved to folder: ${data.filename}`, 'system');
+          })
+          .catch(error => {
+            console.error('Error saving evaluation data:', error);
+            addLog(lang === 'ko' ? '❌ 서버 저장 실패 (브라우저 다운로드로 대체합니다)' : '❌ Server save failed (falling back to browser download)', 'alert');
+
+            // Fallback: Trigger browser download of JSON file
+            try {
+              const blob = new Blob([JSON.stringify(evalData, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `eval_${condition}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.error('Fallback download failed:', e);
+            }
+          });
+
+        addLog(t.logEvalSubmit, 'system');
+        setEvalSubmitted(true);
+        console.log('[Heuristic Evaluation Result]', JSON.stringify(evalData, null, 2));
+        if (simulationDone) {
+          setTimeout(() => setScreen('complete'), 1500);
+        }
+      };
+
+      // Transition to complete or next condition based on mode
+      useEffect(() => {
+        if (simulationDone) {
+          if (mode === 'ut') {
+            if (evalSubmitted) {
+              setTimeout(() => setScreen('complete'), 1500);
+            }
+          } else if (mode === 'experiment') {
+            const timer = setTimeout(() => {
+              // Save experiment results for this specific condition
+              const payload = {
+                mode: 'main_experiment',
+                condition: condition,
+                timestamp: new Date().toISOString(),
+                elapsedTime,
+                decisions,
+                logs: logs.map(l => ({ text: l.text, type: l.type, time: l.time.toISOString() }))
+              };
+
+              fetch('/api/save-eval', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+              })
+                .then(res => {
+                  if (!res.ok) throw new Error('Failed to save to server');
+                  return res.json();
+                })
+                .then(data => {
+                  console.log('Saved experiment results:', data);
+                  addLog(lang === 'ko' ? `💾 실험 결과가 폴더에 저장되었습니다: ${data.filename}` : `💾 Experiment results saved: ${data.filename}`, 'system');
+                })
+                .catch(err => {
+                  console.error('Failed to save experiment results:', err);
+                  // Fallback browser download
+                  try {
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `experiment_${condition}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch (e) {
+                    console.error(e);
+                  }
+                });
+
+              setScreen('complete');
+            }, 1500);
+            return () => clearTimeout(timer);
+          }
+        }
+      }, [simulationDone, evalSubmitted, mode, condition, decisions, logs, elapsedTime]);
+
+      const renderEvalPanel = () => (
+        <div className={`eval-panel-wrapper ${evalPanelOpen ? 'open' : ''}`}>
+          <button className="eval-toggle-tab" onClick={() => setEvalPanelOpen(prev => !prev)}>
+            <span className="tab-icon">{evalSubmitted ? '✓' : '📋'}</span>
+            <span className="tab-label">{evalSubmitted ? '완료' : '평가'}</span>
+          </button>
+          <div className="eval-panel-content">
+            <div className="eval-panel-header">
+              <h3>📋 휴리스틱 평가</h3>
+              <button className="eval-close-btn" onClick={() => setEvalPanelOpen(false)}>✕ 닫기</button>
+            </div>
+            {evalSubmitted ? (
+              <div className="eval-complete-state">
+                <div className="eval-check-icon">✓</div>
+                <div className="eval-complete-title">감사합니다</div>
+                <div className="eval-complete-desc">정상적으로 제출되었습니다.</div>
+              </div>
+            ) : (
+              <>
+                <div className="eval-panel-body">
+                  <div className="eval-guidance">
+                    <span className="guide-icon">💡</span>
+                    <span>각 수술 단계와 AI 의사결정 상황을 포함하여 인터페이스를 충분히 탐색한 후 평가를 진행해 주세요.</span>
+                  </div>
+                  {EVAL_ITEMS.map((item, idx) => (
+                    <div key={item.id} className={`eval-item ${evalScores[item.id] ? 'answered' : ''}`}>
+                      <div className="eval-item-header">
+                        <span className="eval-item-num">{idx + 1}</span>
+                        <span className="eval-item-label">{item.label}</span>
+                      </div>
+                      <div className="eval-item-desc">{item.desc}</div>
+                      <div className="likert-row">
+                        <span className="likert-end-label">매우<br />낮음</span>
+                        <div className="likert-options">
+                          {[1, 2, 3, 4, 5].map(score => (
+                            <label key={score} className="likert-option">
+                              <input
+                                type="radio"
+                                name={`eval-${item.id}`}
+                                value={score}
+                                checked={evalScores[item.id] === score}
+                                onChange={() => setEvalScores(prev => ({ ...prev, [item.id]: score }))}
+                              />
+                              <span className="likert-circle">{score}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <span className="likert-end-label">매우<br />높음</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="eval-submit-area">
+                  <button className="eval-submit-btn" disabled={!evalAllAnswered} onClick={handleEvalSubmit}>
+                    제출하기
+                  </button>
+                  <div className="eval-progress">{evalAnsweredCount} / {EVAL_ITEMS.length} 응답 완료</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+
+      // ---- SCREENS ----
+
+      // ---- SCREENS ----
+
+      if (screen === 'landing') {
+        if (mode === 'select') {
+          return (
+            <div className="landing animate-in">
+              <div style={{ display: 'flex', gap: '0.5rem', position: 'absolute', top: '2rem', right: '2.5rem' }}>
+                <button onClick={() => setLang('ko')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'ko' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'ko' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'ko' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>한국어</button>
+                <button onClick={() => setLang('en')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'en' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'en' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'en' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>English</button>
+              </div>
+              <h1>{t.landingTitle}</h1>
+              <p className="subtitle">{t.landingSubtitle}</p>
+
+              <div className="mode-select-container">
+                <div className="mode-select-grid">
+                  {/* UT Mode Card */}
+                  <div className="mode-card ut-mode" onClick={() => { setMode('ut'); setCondition('C'); }}>
+                    <span className="mode-badge badge-ut">UT / Heuristic</span>
+                    <h3>📋 {lang === 'ko' ? '휴리스틱 평가 (UT)' : 'Heuristic Evaluation (UT)'}</h3>
+                    <p>
+                      {lang === 'ko'
+                        ? '수술 단계 및 AI 상태 정보가 모두 제시되는 적응형 HMI 인터페이스(Condition C)를 체험하고 사용성 평가를 진행합니다.'
+                        : 'Experience the full adaptive interface (Condition C) and conduct usability evaluation.'}
+                    </p>
+                  </div>
+
+                  {/* Main Experiment Card */}
+                  <div className="mode-card exp-mode" onClick={() => { setMode('experiment'); setCondition(null); }}>
+                    <span className="mode-badge badge-exp">Main Experiment</span>
+                    <h3>🔬 {lang === 'ko' ? '본 실험 (Main Study)' : 'Main Experiment'}</h3>
+                    <p>
+                      {lang === 'ko'
+                        ? '피험자 본 실험을 진행합니다. 연구진의 안내에 따라 세 가지 조건의 인터페이스(Condition A, B, C) 중 하나를 선택하여 진행합니다.'
+                        : 'Perform physician intervention study under one of three selected interface conditions (A, B, C).'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2rem' }}>{t.credits}</p>
+            </div>
+          );
+        }
+
+        if (mode === 'ut') {
+          return (
+            <div className="landing animate-in">
+              <div style={{ display: 'flex', gap: '0.5rem', position: 'absolute', top: '2rem', right: '2.5rem' }}>
+                <button onClick={() => setLang('ko')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'ko' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'ko' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'ko' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>한국어</button>
+                <button onClick={() => setLang('en')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'en' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'en' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'en' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>English</button>
+              </div>
+              <button onClick={() => setMode('select')} style={{ position: 'absolute', top: '2rem', left: '2.5rem', padding: '0.35rem 0.8rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>
+                {lang === 'ko' ? '← 뒤로가기' : '← Back'}
+              </button>
+              <h1>{t.landingTitle}</h1>
+              <p className="subtitle">{t.landingSubtitle}</p>
+              <div className="condition-grid" style={{ maxWidth: '640px', gridTemplateColumns: '1fr' }}>
+                <div className="condition-card" style={{ cursor: 'default' }}>
+                  <span className="tag tag-c" style={{ background: 'rgba(20,184,166,0.15)', color: '#5eead4' }}>Condition C</span>
+                  <h3>{t.conditionTitle}</h3>
+                  <p>{t.conditionDesc}</p>
+                </div>
+              </div>
+              <button className="btn btn-approve" style={{ marginTop: '1.5rem', padding: '0.75rem 3rem', fontSize: '1rem', borderRadius: '12px' }} onClick={() => startSimulation('C')}>
+                {t.startBtn}
+              </button>
+            </div>
+          );
+        }
+
+        if (mode === 'experiment') {
+          return (
+            <div className="landing animate-in">
+              <div style={{ display: 'flex', gap: '0.5rem', position: 'absolute', top: '2rem', right: '2.5rem' }}>
+                <button onClick={() => setLang('ko')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'ko' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'ko' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'ko' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>한국어</button>
+                <button onClick={() => setLang('en')} style={{ padding: '0.35rem 0.8rem', borderRadius: '6px', border: lang === 'en' ? '1.5px solid var(--accent-blue)' : '1px solid var(--border)', background: lang === 'en' ? 'rgba(59,130,246,0.15)' : 'transparent', color: lang === 'en' ? '#60a5fa' : 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>English</button>
+              </div>
+              <button onClick={() => setMode('select')} style={{ position: 'absolute', top: '2rem', left: '2.5rem', padding: '0.35rem 0.8rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit' }}>
+                {lang === 'ko' ? '← 뒤로가기' : '← Back'}
+              </button>
+
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--accent-purple)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+                {lang === 'ko' ? '본 실험 (Main Study)' : 'Main Study'}
+              </div>
+              <h1>{lang === 'ko' ? '실험 조건 선택' : 'Select Study Condition'}</h1>
+              <p className="subtitle" style={{ marginBottom: '2.5rem' }}>
+                {lang === 'ko'
+                  ? '진행하고자 하는 인터페이스 조건을 선택하여 시뮬레이션을 시작해 주세요.'
+                  : 'Please select the interface condition you wish to proceed with to start the simulation.'}
+              </p>
+
+              <div className="condition-grid" style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', margin: '0 auto' }}>
+                {/* Card A */}
+                <div className="condition-card" onClick={() => startSimulation('A')}>
+                  <span className="tag tag-a" style={{ background: 'rgba(100,116,139,0.2)', color: '#94a3b8', display: 'inline-block', marginBottom: '1rem' }}>Condition A</span>
+                  <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Static Interface</h3>
+                  <p>
+                    {lang === 'ko'
+                      ? '정적 인터페이스. 수술 단계나 AI 상태 정보 변화와 무관하게 동일한 구조의 정보가 고정되어 일관되게 제시됩니다.'
+                      : 'Presents fixed static information regardless of surgical phase or AI internal state changes.'}
+                  </p>
+                </div>
+
+                {/* Card B */}
+                <div className="condition-card" onClick={() => startSimulation('B')}>
+                  <span className="tag tag-b" style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', display: 'inline-block', marginBottom: '1rem' }}>Condition B</span>
+                  <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Phase-Adaptive Interface</h3>
+                  <p>
+                    {lang === 'ko'
+                      ? '수술 단계 적응형 인터페이스. 수술 단계(Phase) 변화에 맞추어 레이아웃이 동적으로 바뀌며 맥락 정보와 고유 위험도를 제시합니다.'
+                      : 'Information adaptively changes according to surgical phases, showing context and phase-specific risks.'}
+                  </p>
+                </div>
+
+                {/* Card C */}
+                <div className="condition-card" onClick={() => startSimulation('C')}>
+                  <span className="tag tag-c" style={{ background: 'rgba(20,184,166,0.15)', color: '#5eead4', display: 'inline-block', marginBottom: '1rem' }}>Condition C</span>
+                  <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Full Adaptive Interface</h3>
+                  <p>
+                    {lang === 'ko'
+                      ? '수술 단계 및 AI 상태 적응형 인터페이스. 수술 단계뿐만 아니라 AI의 내부 신뢰도 수치와 판단 근거 정보까지 통합하여 적응적으로 제시합니다.'
+                      : 'Fully adaptively presents both surgical phase changes and AI internal states (confidence, reasoning).'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      }
+
+      if (screen === 'complete') {
+        const handleReturnToStudyMenu = () => {
+          setScreen('landing');
+          setCondition(null);
+          setCurrentPhaseIdx(0);
+          setCurrentEventIdx(0);
+          setActiveEvent(null);
+          setDecisions([]);
+          setLogs([]);
+          setElapsedTime(0);
+          setSimulationDone(false);
+        };
+
+        return (
+          <div className="completion-screen animate-in">
+            <div className="completion-card" style={{ borderColor: mode === 'experiment' ? 'rgba(167,139,250,0.3)' : 'var(--border)' }}>
+              <h2>
+                {mode === 'experiment'
+                  ? (lang === 'ko' ? `🔬 Condition ${condition} 실험 완료` : `🔬 Condition ${condition} Study Complete`)
+                  : t.completionTitle}
+              </h2>
+
+              {mode === 'experiment' ? (
+                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '1.5rem 0' }}>
+                  {lang === 'ko'
+                    ? `Condition ${condition} 수술 시뮬레이션 실험이 성공적으로 완료되었습니다. 실험 로그 데이터가 로컬 폴더에 저장되었습니다.`
+                    : `Simulation study for Condition ${condition} has been completed. Experimental log data has been saved to the local folder.`}
+                </p>
+              ) : (
+                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: '1.5rem 0' }}>
+                  {lang === 'ko'
+                    ? '휴리스틱 평가 및 UT 시뮬레이션이 성공적으로 완료되었습니다. 평가 결과 파일이 로컬 폴더에 안전하게 저장되었습니다.'
+                    : 'The heuristic evaluation and UT simulation have been successfully completed. The results file has been safely saved to the local folder.'}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.8rem', marginTop: '2rem', justifyContent: 'center' }}>
+                {mode === 'experiment' && (
+                  <button className="btn btn-secondary" style={{ padding: '0.6rem 2rem' }} onClick={handleReturnToStudyMenu}>
+                    {lang === 'ko' ? '실험 메뉴로 돌아가기' : 'Return to Study Menu'}
+                  </button>
+                )}
+                <button className="btn btn-approve" style={{ background: mode === 'experiment' ? 'var(--accent-purple)' : 'var(--accent-blue)', padding: '0.6rem 2rem' }} onClick={handleExit}>
+                  {lang === 'ko' ? '시작 화면으로 이동' : 'Go to Start Screen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ---- SIMULATION SCREEN ----
+      return (
+        <div className="sim-container" style={{
+          gridTemplateColumns: mode === 'experiment' ? '300px 1fr' : '300px 1fr 320px'
+        }}>
+          {/* Top Bar — Left/Center */}
+          <div className="topbar">
+            <div className="topbar-brand">
+              <span className="dot"></span>
+              Surgical AI Monitor
+            </div>
+            <div className="topbar-info">
+              {mode === 'experiment' && (
+                <span className={`badge ${condition === 'A' ? 'badge-static' : condition === 'B' ? 'badge-phase' : 'badge-full'}`} style={{
+                  background: condition === 'A' ? 'rgba(100,116,139,0.2)' : condition === 'B' ? 'rgba(59,130,246,0.15)' : 'rgba(167,139,250,0.15)',
+                  color: condition === 'A' ? '#94a3b8' : condition === 'B' ? '#60a5fa' : '#c084fc',
+                  fontWeight: 600,
+                  fontSize: '0.72rem',
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '4px'
+                }}>
+                  Condition {condition}: {condition === 'A' ? 'Static' : condition === 'B' ? 'Phase-Adaptive' : 'Full Adaptive'}
+                </span>
+              )}
+              <span style={{ cursor: 'pointer', opacity: 0.6 }} onClick={handleExit}>{t.topbarExit}</span>
+            </div>
+          </div>
+          {/* Top Bar — Right */}
+          {mode !== 'experiment' && <div className="topbar-right">Heuristic Evaluation</div>}
+
+          {/* Left Panel — Phase & Vitals */}
+          <div className="left-panel">
+            <div className="panel-section">
+              <div className="panel-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{t.surgicalPhase}</span>
+                <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{currentPhaseIdx + 1} / {PHASES.length}</span>
+              </div>
+              <div className="progress-track" style={{ marginBottom: '0.6rem' }}>
+                <div className="progress-fill" style={{ width: `${((currentPhaseIdx + 1) / PHASES.length) * 100}%` }}></div>
+              </div>
+              <div className="phase-list">
+                {PHASES.map((p, i) => (
+                  <div key={p.id} className={`phase-item ${i === currentPhaseIdx ? 'active' : i < currentPhaseIdx ? 'completed' : ''}`}>
+                    <span className="phase-dot"></span>
+                    <span style={{ fontSize: '0.72rem' }}>{p.nameEn?.replace(/^P\d: /, '') || p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Phase-adaptive info (B, C only) */}
+            {(condition === 'B' || condition === 'C') && (
+              <div className="panel-section animate-in">
+                <div className="panel-title">{t.phaseInfoTitle}</div>
+                <div className="phase-info-card">
+                  <div className="phase-info-title">{lang === 'en' ? currentPhase?.nameEn : currentPhase?.name}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                    {activeEvent ? (lang === 'en' ? activeEvent.phaseContext : activeEvent.phaseContext) : `${lang === 'en' ? currentPhase?.nameEn : currentPhase?.name} ${t.inProgressLabel}`}
+                  </div>
+                  <div className="risk-indicator">
+                    <span className={`risk-dot risk-${currentPhase?.risk}`}></span>
+                    <span className="risk-label">
+                      {t.riskLabel}: <span style={{ fontWeight: 600, color: currentPhase?.risk === 'high' ? 'var(--accent-red)' : currentPhase?.risk === 'medium' ? 'var(--accent-amber)' : 'var(--accent-green)' }}>{currentPhase?.risk?.toUpperCase()}</span>
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                    {t.cholecMedianLabel}: {currentPhase?.cholec80Median} · {t.toolsLabel}: {currentPhase?.tools?.join(', ')}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="panel-section">
+              <div className="panel-title">{t.vitalSign}</div>
+              <div className="vital-grid">
+                <div className="vital-card">
+                  <div className="vital-label">HR (bpm)</div>
+                  <div className={`vital-value ${vitals.hr > 90 ? 'warning' : 'normal'}`}>{vitals.hr}</div>
+                </div>
+                <div className="vital-card">
+                  <div className="vital-label">BP (mmHg)</div>
+                  <div className="vital-value normal">{vitals.bp}</div>
+                </div>
+                <div className="vital-card">
+                  <div className="vital-label">SpO₂ (%)</div>
+                  <div className={`vital-value ${vitals.spo2 < 95 ? 'danger' : 'normal'}`}>{vitals.spo2}</div>
+                </div>
+                <div className="vital-card">
+                  <div className="vital-label">CO₂ (mmHg)</div>
+                  <div className={`vital-value ${vitals.co2 > 15 ? 'warning' : 'normal'}`}>{vitals.co2}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Center — Surgical Viewport + AI Info */}
+          <div className="center-panel">
+            <div className="surgical-viewport">
+              <div className="viewport-label">
+                <span className="rec"></span>
+                {t.liveLabel}
+              </div>
+
+              {/* Vertical Stepper Overlay (Condition B, C only) */}
+              {(condition === 'B' || condition === 'C') && (
+                <div className="vertical-stepper-container animate-in">
+                  <div className="vertical-steps">
+                    <div className="vertical-progress-line" style={{
+                      height: `${(currentPhaseIdx / (PHASES.length - 1)) * 100}%`
+                    }}></div>
+                    {PHASES.map((p, i) => (
+                      <div key={p.id} className={`vertical-step-item ${i === currentPhaseIdx ? 'active' : i < currentPhaseIdx ? 'completed' : ''}`}>
+                        <div className="vertical-step-node">{i + 1}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Floating Time Display Badge */}
+              <div className="viewport-time-badge mono">
+                ⏱ {fmt(elapsedTime)}
+              </div>
+              <SurgicalView phase={currentPhase?.id} phaseIndex={currentPhaseIdx} />
+            </div>
+
+            {/* AI Info Area */}
+            <div className="ai-info-area">
+              {activeEvent ? (
+                <>
+                  <div className="ai-info-content">
+                    {/* Left: Decision + Buttons */}
+                    <div className="ai-left-column">
+                      <div className="ai-decision-section">
+                        <span className={`ai-decision-badge ${activeEvent.type === 'alert' ? 'alert' : ''}`}>
+                          {activeEvent.type === 'alert' ? t.alert : t.decision}
+                        </span>
+                        <div className="ai-decision-title">{lang === 'en' ? activeEvent.titleEn : activeEvent.title}</div>
+                        <div className="ai-decision-desc">{lang === 'en' ? activeEvent.descEn : activeEvent.desc}</div>
+                      </div>
+                      <div className="ai-action-buttons">
+                        <button className="btn-approve-lg" onClick={() => handleDecision('approve')}>
+                          {t.approve}
+                        </button>
+                        <button className="btn-intervene-lg" onClick={() => handleDecision('intervene')}>
+                          {t.intervene}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right: AI Confidence — Condition C only */}
+                    {condition === 'C' && (
+                      <div className="ai-confidence-section animate-in">
+                        <div className="ai-confidence-header">
+                          <span className="ai-confidence-label">{t.aiConfidence}</span>
+                          <span className={`ai-confidence-value mono`} style={{ color: activeEvent.aiConfidence >= 80 ? 'var(--accent-green)' : activeEvent.aiConfidence >= 65 ? 'var(--accent-amber)' : 'var(--accent-red)' }}>
+                            {activeEvent.aiConfidence}%
+                          </span>
+                        </div>
+                        <div className="confidence-bar-bg">
+                          <div className="confidence-bar-fill" style={{
+                            width: `${activeEvent.aiConfidence}%`,
+                            background: activeEvent.aiConfidence >= 80 ? 'var(--accent-green)' : activeEvent.aiConfidence >= 65 ? 'var(--accent-amber)' : 'var(--accent-red)'
+                          }}></div>
+                        </div>
+                        <div className="ai-confidence-warning" style={{ color: activeEvent.aiConfidence >= 80 ? 'var(--accent-green)' : activeEvent.aiConfidence >= 65 ? 'var(--accent-amber)' : 'var(--accent-red)', fontSize: '0.75rem', marginTop: '0.25rem', fontWeight: 600 }}>
+                          {activeEvent.aiConfidence >= 80 ? t.highConf : activeEvent.aiConfidence >= 65 ? t.modConf : t.lowConf}
+                        </div>
+
+                        {/* Explicitly structured reasoning section */}
+                        <div className="ai-reasoning-section" style={{
+                          marginTop: '0.75rem',
+                          borderTop: '1px solid var(--border)',
+                          paddingTop: '0.65rem',
+                          textAlign: 'left'
+                        }}>
+                          <div style={{
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            color: 'var(--text-secondary)',
+                            marginBottom: '0.25rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}>
+                            <span>🔍</span>
+                            <span>{lang === 'en' ? 'Reasoning' : '판단 근거'}</span>
+                          </div>
+                          <div className="ai-reasoning-text" style={{
+                            fontSize: '0.85rem',
+                            color: 'var(--text-primary)',
+                            lineHeight: '1.45',
+                            fontWeight: 500
+                          }}>
+                            {lang === 'en' ? `Basis: ${activeEvent.aiReasoningEn}` : `근거: ${activeEvent.aiReasoning}`}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="ai-waiting-state">
+                  <span className="animate-pulse">{t.waitingMsg}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Panel — Heuristic Evaluation */}
+          {mode !== 'experiment' && (
+            <div className="right-panel">
+              {evalSubmitted ? (
+                <div className="eval-complete-state">
+                  <div className="eval-check-icon">✓</div>
+                  <div className="eval-complete-title">{t.evalCompleteTitle}</div>
+                  <div className="eval-complete-desc">{t.evalCompleteDesc}</div>
+                </div>
+              ) : (
+                <>
+                  <div className="eval-panel-body">
+                    <div className="eval-guidance">
+                      <span className="guide-icon">💡</span>
+                      <span>{t.evalGuidance}</span>
+                    </div>
+                    {EVAL_ITEMS.map((item, idx) => (
+                      <div key={item.id} className={`eval-item ${evalScores[item.id] ? 'answered' : ''}`}>
+                        <div className="eval-item-header">
+                          <span className="eval-item-num">{idx + 1}</span>
+                          <span className="eval-item-label">{item.label}</span>
+                        </div>
+                        <div className="eval-item-desc">{t.evalDesc[item.id]}</div>
+                        <div className="likert-row">
+                          <span className="likert-end-label" dangerouslySetInnerHTML={{ __html: t.likertLow.replace('\n', '<br/>') }} />
+                          <div className="likert-options">
+                            {[1, 2, 3, 4, 5].map(score => (
+                              <label key={score} className="likert-option">
+                                <input
+                                  type="radio"
+                                  name={`eval-${item.id}`}
+                                  value={score}
+                                  checked={evalScores[item.id] === score}
+                                  onChange={() => setEvalScores(prev => ({ ...prev, [item.id]: score }))}
+                                />
+                                <span className="likert-circle">{score}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <span className="likert-end-label" dangerouslySetInnerHTML={{ __html: t.likertHigh.replace('\n', '<br/>') }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="eval-submit-area">
+                    <button className="eval-submit-btn" disabled={!evalAllAnswered} onClick={handleEvalSubmit}>
+                      {t.evalSubmit}
+                    </button>
+                    <div className="eval-progress">{evalAnsweredCount} / {EVAL_ITEMS.length} {t.evalProgress}</div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>

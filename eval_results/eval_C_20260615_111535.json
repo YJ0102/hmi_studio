@@ -1,0 +1,169 @@
+{
+  "condition": "C",
+  "timestamp": "2026-06-15T02:15:35.233Z",
+  "elapsedTime": 270,
+  "evaluationScores": {
+    "situation_awareness": 3,
+    "ai_transparency": 4,
+    "info_prioritization": 3,
+    "cognitive_load": 4,
+    "interaction_clarity": 5
+  },
+  "decisions": [
+    {
+      "eventId": "e1",
+      "phase": "preparation",
+      "action": "approve",
+      "correct": true,
+      "responseTime": 121,
+      "aiConfidence": 92
+    },
+    {
+      "eventId": "e2",
+      "phase": "dissection",
+      "action": "approve",
+      "correct": false,
+      "responseTime": 31,
+      "aiConfidence": 62
+    },
+    {
+      "eventId": "e3",
+      "phase": "dissection",
+      "action": "approve",
+      "correct": true,
+      "responseTime": 10,
+      "aiConfidence": 84
+    },
+    {
+      "eventId": "e4",
+      "phase": "clipping",
+      "action": "approve",
+      "correct": false,
+      "responseTime": 30,
+      "aiConfidence": 55
+    },
+    {
+      "eventId": "e5",
+      "phase": "separation",
+      "action": "intervene",
+      "correct": false,
+      "responseTime": 24,
+      "aiConfidence": 90
+    },
+    {
+      "eventId": "e6",
+      "phase": "extraction",
+      "action": "approve",
+      "correct": true,
+      "responseTime": 8,
+      "aiConfidence": 86
+    }
+  ],
+  "logs": [
+    {
+      "text": "시뮬레이션 시작 — 복강경 담낭절제술",
+      "type": "system",
+      "time": "2026-06-15T02:11:04.741Z"
+    },
+    {
+      "text": "인터페이스 조건: Phase + AI-State Adaptive",
+      "type": "system",
+      "time": "2026-06-15T02:11:04.741Z"
+    },
+    {
+      "text": "이벤트 발생: AI 자동 기복(Pneumoperitoneum) 압력 설정",
+      "type": "ai",
+      "time": "2026-06-15T02:11:07.746Z"
+    },
+    {
+      "text": "✓ AI 판단 승인 — AI 자동 기복(Pneumoperitoneum) 압력 설정 (121s)",
+      "type": "user",
+      "time": "2026-06-15T02:13:09.640Z"
+    },
+    {
+      "text": "단계 전환: Calot 삼각 박리 (Calot Triangle Dissection)",
+      "type": "system",
+      "time": "2026-06-15T02:13:11.641Z"
+    },
+    {
+      "text": "이벤트 발생: ⚠ Critical View of Safety (CVS) 미확보 경고",
+      "type": "ai",
+      "time": "2026-06-15T02:13:14.643Z"
+    },
+    {
+      "text": "✓ AI 판단 승인 — ⚠ Critical View of Safety (CVS) 미확보 경고 (31s)",
+      "type": "user",
+      "time": "2026-06-15T02:13:45.745Z"
+    },
+    {
+      "text": "⚠ 이 상황에서는 의사 개입이 더 적절했을 수 있습니다",
+      "type": "alert",
+      "time": "2026-06-15T02:13:45.745Z"
+    },
+    {
+      "text": "이벤트 발생: AI 조직 견인 방향 자동 조정",
+      "type": "ai",
+      "time": "2026-06-15T02:13:48.747Z"
+    },
+    {
+      "text": "✓ AI 판단 승인 — AI 조직 견인 방향 자동 조정 (10s)",
+      "type": "user",
+      "time": "2026-06-15T02:13:59.557Z"
+    },
+    {
+      "text": "단계 전환: 결찰 및 절단 (Clipping & Cutting)",
+      "type": "system",
+      "time": "2026-06-15T02:14:01.559Z"
+    },
+    {
+      "text": "이벤트 발생: ⚠ 담낭관(Cystic Duct) 구조 확인 필요",
+      "type": "ai",
+      "time": "2026-06-15T02:14:04.562Z"
+    },
+    {
+      "text": "✓ AI 판단 승인 — ⚠ 담낭관(Cystic Duct) 구조 확인 필요 (30s)",
+      "type": "user",
+      "time": "2026-06-15T02:14:34.702Z"
+    },
+    {
+      "text": "⚠ 이 상황에서는 의사 개입이 더 적절했을 수 있습니다",
+      "type": "alert",
+      "time": "2026-06-15T02:14:34.702Z"
+    },
+    {
+      "text": "단계 전환: 담낭 박리 (Gallbladder Dissection)",
+      "type": "system",
+      "time": "2026-06-15T02:14:36.706Z"
+    },
+    {
+      "text": "이벤트 발생: AI 전기소작(Electrocautery) 출력 자동 조정",
+      "type": "ai",
+      "time": "2026-06-15T02:14:39.708Z"
+    },
+    {
+      "text": "✗ 의사 개입 결정 — AI 전기소작(Electrocautery) 출력 자동 조정 (24s)",
+      "type": "user",
+      "time": "2026-06-15T02:15:04.016Z"
+    },
+    {
+      "text": "⚠ AI 판단이 적절했을 수 있는 상황이었습니다",
+      "type": "alert",
+      "time": "2026-06-15T02:15:04.016Z"
+    },
+    {
+      "text": "단계 전환: 담낭 적출 (Gallbladder Retraction)",
+      "type": "system",
+      "time": "2026-06-15T02:15:06.019Z"
+    },
+    {
+      "text": "이벤트 발생: 배액관 삽입 생략 제안",
+      "type": "ai",
+      "time": "2026-06-15T02:15:09.023Z"
+    },
+    {
+      "text": "✓ AI 판단 승인 — 배액관 삽입 생략 제안 (8s)",
+      "type": "user",
+      "time": "2026-06-15T02:15:17.916Z"
+    }
+  ]
+}
