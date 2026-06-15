@@ -1,6 +1,6 @@
 {
   "condition": "C",
-  "timestamp": "2026-06-15T01:29:31.510Z",
+  "timestamp": "2026-06-09T01:29:31.510Z",
   "elapsedTime": 267,
   "evaluationScores": {
     "situation_awareness": 5,
@@ -63,102 +63,102 @@
     {
       "text": "Simulation started — Laparoscopic Cholecystectomy",
       "type": "system",
-      "time": "2026-06-15T01:25:03.892Z"
+      "time": "2026-06-09T01:25:03.892Z"
     },
     {
       "text": "Interface condition: Phase + AI-State Adaptive",
       "type": "system",
-      "time": "2026-06-15T01:25:03.892Z"
+      "time": "2026-06-09T01:25:03.892Z"
     },
     {
       "text": "Event occurred: AI 자동 기복(Pneumoperitoneum) 압력 설정",
       "type": "ai",
-      "time": "2026-06-15T01:25:06.897Z"
+      "time": "2026-06-09T01:25:06.897Z"
     },
     {
       "text": "✓ AI decision approved — AI 자동 기복(Pneumoperitoneum) 압력 설정 (60s)",
       "type": "user",
-      "time": "2026-06-15T01:26:07.445Z"
+      "time": "2026-06-09T01:26:07.445Z"
     },
     {
       "text": "Phase transition: Calot 삼각 박리 (Calot Triangle Dissection)",
       "type": "system",
-      "time": "2026-06-15T01:26:09.448Z"
+      "time": "2026-06-09T01:26:09.448Z"
     },
     {
       "text": "Event occurred: ⚠ Critical View of Safety (CVS) 미확보 경고",
       "type": "ai",
-      "time": "2026-06-15T01:26:12.451Z"
+      "time": "2026-06-09T01:26:12.451Z"
     },
     {
       "text": "✓ AI decision approved — ⚠ Critical View of Safety (CVS) 미확보 경고 (46s)",
       "type": "user",
-      "time": "2026-06-15T01:26:58.825Z"
+      "time": "2026-06-09T01:26:58.825Z"
     },
     {
       "text": "⚠ Physician intervention may have been more appropriate",
       "type": "alert",
-      "time": "2026-06-15T01:26:58.825Z"
+      "time": "2026-06-09T01:26:58.825Z"
     },
     {
       "text": "Event occurred: AI 조직 견인 방향 자동 조정",
       "type": "ai",
-      "time": "2026-06-15T01:27:01.828Z"
+      "time": "2026-06-09T01:27:01.828Z"
     },
     {
       "text": "✓ AI decision approved — AI 조직 견인 방향 자동 조정 (23s)",
       "type": "user",
-      "time": "2026-06-15T01:27:25.375Z"
+      "time": "2026-06-09T01:27:25.375Z"
     },
     {
       "text": "Phase transition: 결찰 및 절단 (Clipping & Cutting)",
       "type": "system",
-      "time": "2026-06-15T01:27:27.378Z"
+      "time": "2026-06-09T01:27:27.378Z"
     },
     {
       "text": "Event occurred: ⚠ 담낭관(Cystic Duct) 구조 확인 필요",
       "type": "ai",
-      "time": "2026-06-15T01:27:30.382Z"
+      "time": "2026-06-09T01:27:30.382Z"
     },
     {
       "text": "✓ AI decision approved — ⚠ 담낭관(Cystic Duct) 구조 확인 필요 (28s)",
       "type": "user",
-      "time": "2026-06-15T01:27:58.561Z"
+      "time": "2026-06-09T01:27:58.561Z"
     },
     {
       "text": "⚠ Physician intervention may have been more appropriate",
       "type": "alert",
-      "time": "2026-06-15T01:27:58.561Z"
+      "time": "2026-06-09T01:27:58.561Z"
     },
     {
       "text": "Phase transition: 담낭 박리 (Gallbladder Dissection)",
       "type": "system",
-      "time": "2026-06-15T01:28:00.564Z"
+      "time": "2026-06-09T01:28:00.564Z"
     },
     {
       "text": "Event occurred: AI 전기소작(Electrocautery) 출력 자동 조정",
       "type": "ai",
-      "time": "2026-06-15T01:28:03.567Z"
+      "time": "2026-06-09T01:28:03.567Z"
     },
     {
       "text": "✓ AI decision approved — AI 전기소작(Electrocautery) 출력 자동 조정 (12s)",
       "type": "user",
-      "time": "2026-06-15T01:28:15.969Z"
+      "time": "2026-06-09T01:28:15.969Z"
     },
     {
       "text": "Phase transition: 담낭 적출 (Gallbladder Retraction)",
       "type": "system",
-      "time": "2026-06-15T01:28:17.971Z"
+      "time": "2026-06-09T01:28:17.971Z"
     },
     {
       "text": "Event occurred: 배액관 삽입 생략 제안",
       "type": "ai",
-      "time": "2026-06-15T01:28:20.973Z"
+      "time": "2026-06-09T01:28:20.973Z"
     },
     {
       "text": "✓ AI decision approved — 배액관 삽입 생략 제안 (15s)",
       "type": "user",
-      "time": "2026-06-15T01:28:36.882Z"
+      "time": "2026-06-09T01:28:36.882Z"
     }
   ]
 }
